@@ -1,0 +1,1 @@
+public enum ItemType { Straw, Rock, Date, Coin }
