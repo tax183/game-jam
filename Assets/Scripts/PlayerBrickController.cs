@@ -17,15 +17,18 @@ public class PlayerBrickController : MonoBehaviour
     private float tStart;
     private Vector3 startPos, peakPos;
 
-    void Start(){ UpdateHitzones(); }
+    void Start() { UpdateHitzones(); }
 
     void Update()
     {
         if (pose != Pose.Jumping)
         {
-            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
+            // زر الأسفل يقوم بالنزول (بالنسبة لك: القفز)
+            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
                 EnterInverted();
-            else if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
+
+            // زر الأعلى يقوم بالقفز
+            else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
             {
                 if (pose == Pose.InvertedUnder) ExitInverted();
                 else StartJump();
@@ -64,7 +67,7 @@ public class PlayerBrickController : MonoBehaviour
         if (pose != Pose.NormalMid) return;
         pose = Pose.Jumping;
         startPos = Vector3.zero;
-        peakPos  = new Vector3(0, jumpHeight, 0);
+        peakPos = new Vector3(0, jumpHeight, 0);
         tStart = Time.time;
         transform.localEulerAngles = Vector3.zero;
         SetZones(false, false, true); // top active during jump
@@ -89,7 +92,7 @@ public class PlayerBrickController : MonoBehaviour
 
     void UpdateHitzones()
     {
-        switch(pose)
+        switch (pose)
         {
             case Pose.NormalMid:    SetZones(false, true,  false); break; // mid active
             case Pose.InvertedUnder:SetZones(true,  false, false); break; // bottom active
@@ -104,4 +107,3 @@ public class PlayerBrickController : MonoBehaviour
         if (hitTop)    hitTop.enabled = top;
     }
 }
-
