@@ -1,0 +1,37 @@
+# =============== Unity ===============
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+UserSettings/
+
+# Visual Studio cache
+.vs/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+
+# Crash Reports
+sysinfo.txt
+
+# Collaborate
+.collab/
+
+# Generated
+*.mdb
+*.pdb
+
+# OS-specific
+.DS_Store
+Thumbs.db
+ 
