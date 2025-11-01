@@ -3,21 +3,20 @@
 public class GameController : MonoBehaviour
 {
     [Header("Round")]
-    public int  targetStraw    = 14;
-    public int  hearts         = 3;
-    public float roundSeconds  = 60f;
+    public int targetStraw = 14;      // عدد القشات المطلوبة
+    public int hearts = 3;            // عدد القلوب
+    public float roundSeconds = 60f;  // الوقت المتبقي
     public bool forceFullMinute = true;
 
     [Header("References")]
     public ItemSpawner spawner;
 
-    int   strawCount = 0;
-    float endAt;
-    bool  ended = false;
+    int strawCount = 0;   // عدد القشات التي جمعها اللاعب
+    float endAt;          // وقت انتهاء الجولة
+    bool ended = false;   // حالة إذا كانت اللعبة انتهت أو لا
 
     void Awake()
     {
-        // لو تبين تضمنين دقيقة مهما حصل:
         if (forceFullMinute) roundSeconds = 60f;
     }
 
@@ -27,6 +26,7 @@ public class GameController : MonoBehaviour
         GameEvents.OnHeartLost      += HandleHeartLost;
         GameEvents.OnInstantFail    += HandleInstantFail;
         GameEvents.OnTimeReduced    += HandleTimeReduced;
+        GameEvents.OnCoinCollected  += HandleCoinCollected;  // التعامل مع جمع العملة
     }
 
     void OnDisable()
@@ -35,6 +35,7 @@ public class GameController : MonoBehaviour
         GameEvents.OnHeartLost      -= HandleHeartLost;
         GameEvents.OnInstantFail    -= HandleInstantFail;
         GameEvents.OnTimeReduced    -= HandleTimeReduced;
+        GameEvents.OnCoinCollected  -= HandleCoinCollected;
     }
 
     void Start()
@@ -60,8 +61,17 @@ public class GameController : MonoBehaviour
 
         if (remaining <= 0f)
         {
-            EndRound(false);
-            GameEvents.RaiseTimeUp();
+            // إذا انتهى الوقت وكان اللاعب لم يجمع 14 قشة بعد
+            if (strawCount < targetStraw)
+            {
+                EndRound(false);
+                GameEvents.RaiseTimeUp(); // Trigger lose panel
+            }
+            else
+            {
+                EndRound(true);
+                GameEvents.RaiseGoalReached(); // Trigger win panel
+            }
         }
     }
 
@@ -74,13 +84,13 @@ public class GameController : MonoBehaviour
     {
         if (ended) return;
         strawCount++;
-        
+
         // Check win condition: must have 14 straws AND time remaining
         float remaining = GetRemainingTime();
         if (strawCount >= targetStraw && remaining > 0f)
         {
             EndRound(true);
-            GameEvents.RaiseGoalReached();
+            GameEvents.RaiseGoalReached(); // Trigger win panel
         }
     }
 
@@ -89,7 +99,7 @@ public class GameController : MonoBehaviour
         if (ended) return;
         hearts -= Mathf.Abs(amt);
         if (hearts < 0) hearts = 0;
-        
+
         // If no hearts left, lose immediately
         if (hearts <= 0)
         {
@@ -98,21 +108,25 @@ public class GameController : MonoBehaviour
         }
     }
 
+    void HandleCoinCollected()
+    {
+        if (ended) return;
+        EndRound(false);  // If coin is collected, immediately lose
+        GameEvents.RaiseTimeUp(); // Trigger lose panel
+    }
+
     void HandleInstantFail()
     {
         if (ended) return;
         EndRound(false);
     }
-    
+
     void HandleTimeReduced(float seconds)
     {
         if (ended) return;
-        // Reduce remaining time by subtracting from endAt
-        endAt -= seconds;
-        // Ensure time doesn't go negative
+        endAt -= seconds;  // Reduce remaining time by subtracting from endAt
         if (endAt < Time.time) endAt = Time.time;
-        
-        // Immediately update the timer display
+
         float remaining = GetRemainingTime();
         GameEvents.RaiseTimerTick(remaining);
     }
@@ -135,4 +149,5 @@ public class GameController : MonoBehaviour
     public int GetStraw()  => strawCount;
     public int GetHearts() => Mathf.Max(0, hearts);
 }
+
 

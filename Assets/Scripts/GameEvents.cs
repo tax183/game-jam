@@ -8,6 +8,7 @@ public static class GameEvents
     public static Action<int> OnHeartLost;
     public static Action OnInstantFail;
     public static Action OnGoalReached;
+    public static Action OnCoinCollected;
 
     public static Action<float> OnTimerTick;
     public static Action OnTimeUp;
