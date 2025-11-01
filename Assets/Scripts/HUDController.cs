@@ -1,5 +1,6 @@
 using UnityEngine;
-using TMPro; // لمتابعة النصوص في التايمر والقش
+using TMPro;
+using UnityEngine.SceneManagement; // لمتابعة النصوص في التايمر والقش
 
 public class HUDController : MonoBehaviour
 {
@@ -54,6 +55,11 @@ public class HUDController : MonoBehaviour
     
     void LateUpdate()
     {
+        if (controller.GetStraw() >= 14)
+        {
+            SceneManager.LoadScene("Win");
+        }
+        
         // Ensure hearts are shown on first frame if they weren't initialized properly
         if (!heartsInitialized && heartImages != null && heartImages.Length > 0 && controller != null)
         {

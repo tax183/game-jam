@@ -29,14 +29,14 @@ public class PlayerBrickController : MonoBehaviour
         if (pose != Pose.Jumping)
         {
             // زر الأعلى يقوم بالقفز (Jump up)
-            if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
+            if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
             {
                 if (pose == Pose.InvertedUnder) ExitInverted();
                 else StartJump();
             }
 
             // زر الأسفل يقوم بالنزول (Go inverted/under)
-            else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
+            else if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
                 EnterInverted();
         }
 

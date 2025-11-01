@@ -1,7 +1,13 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ItemMover : MonoBehaviour
 {
+    [SerializeField]private AudioClip strawSound;
+    [SerializeField]private AudioClip coinSound;
+    [SerializeField]private AudioClip dateSound;
+    [SerializeField]private AudioClip rockSound;
+    
     public ItemType type;
     public float speed = 5f;
     public float lifetime = 60f;
@@ -62,13 +68,20 @@ public class ItemMover : MonoBehaviour
         // Valid collision - process item
         switch (type)
         {
-            case ItemType.Straw: GameEvents.RaiseStraw();        break;
-            case ItemType.Rock:  GameEvents.RaiseHeartLost(1);    break;
+            case ItemType.Straw: GameEvents.RaiseStraw(); 
+                AudioSource.PlayClipAtPoint(strawSound, transform.position);
+                break;
+            case ItemType.Rock:  GameEvents.RaiseHeartLost(1); 
+                AudioSource.PlayClipAtPoint(rockSound, transform.position);
+                break;
             case ItemType.Date:  
+                AudioSource.PlayClipAtPoint(dateSound, transform.position);
                 GameEvents.RaiseInflate(5f,1.6f); // Inflate hazards
                 GameEvents.RaiseTimeReduced(5f); // Reduce time by 5 seconds
                 break;
-            case ItemType.Coin:  GameEvents.RaiseInstantFail();   break;
+            case ItemType.Coin:  GameEvents.RaiseInstantFail();
+                AudioSource.PlayClipAtPoint(coinSound, transform.position);
+                SceneManager.LoadScene("Lose");  break;
         }
         Destroy(gameObject);
     }

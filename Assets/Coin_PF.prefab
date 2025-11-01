@@ -151,6 +151,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fd8b6c30d3a1644eafb06f1818775b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemMover
+  strawSound: {fileID: 8300000, guid: 5d0949a93c455c3409363885b6f76f3e, type: 3}
+  coinSound: {fileID: 8300000, guid: 8294c18b9efd8c94d84fc2a26dd97809, type: 3}
+  dateSound: {fileID: 8300000, guid: c909b4a5f3d6fe74f8e50fed472f1dfa, type: 3}
+  rockSound: {fileID: 8300000, guid: c53779d39c03e504486afbf9359e27ad, type: 3}
   type: 3
   speed: 5
   lifetime: 10
