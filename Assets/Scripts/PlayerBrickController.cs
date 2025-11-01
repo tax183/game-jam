@@ -32,26 +32,16 @@ public class PlayerBrickController : MonoBehaviour
     {
         if (pose != Pose.Jumping)
         {
-<<<<<<< HEAD
-            // زر الأعلى يقوم بالقفز (Jump up)
-=======
-            // الزر السفلي (↓) الآن يقوم بالقفز للأعلى
->>>>>>> 228c2e20409e80f995df4f9202427b58f8a733db
             if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
             {
                 if (pose == Pose.InvertedUnder) ExitInverted();
                 else StartJump();  // يبدأ القفز للأعلى
             }
 
-<<<<<<< HEAD
             // زر الأسفل يقوم بالنزول (Go inverted/under)
             else if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
                 EnterInverted();
-=======
-            // الزر العلوي (↑) الآن يقوم بنقل الشخصية للأسفل (Inverted)
-            else if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
-                EnterInverted();  // ينقل الشخصية للأسفل (Inverted)
->>>>>>> 228c2e20409e80f995df4f9202427b58f8a733db
+// ينقل الشخصية للأسفل (Inverted)
         }
 
         // التحقق إذا كانت الشخصية في وضع القفز
