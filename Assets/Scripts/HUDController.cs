@@ -1,10 +1,14 @@
 using UnityEngine;
-using TMPro; // ← مهم
+using TMPro; // لمتابعة النصوص في التايمر والقش
 
 public class HUDController : MonoBehaviour
 {
     [Header("UI")]
-    public TMP_Text strawText, heartsText, timerText;  // ← TMP_Text بدل Text
+    public TMP_Text strawText;
+    public TMP_Text timerText;
+
+    [Header("Hearts (Images)")]
+    public GameObject[] heartImages; // مصفوفة من صور القلوب (UI Images)
 
     [Header("Refs")]
     public GameController controller;
@@ -21,13 +25,13 @@ public class HUDController : MonoBehaviour
 
         if (controller != null)
         {
-            UpdateHearts(controller.GetHearts());
+            UpdateHearts(controller.GetHearts());  // بدءاً من عدد القلوب
             UpdateStraw(controller.GetStraw());
             UpdateTimer(controller.roundSeconds);
         }
         else
         {
-            UpdateHearts(0);
+            UpdateHearts(0); // إذا كان GameController غير موجود
             UpdateStraw(0);
             UpdateTimer(0f);
         }
@@ -64,17 +68,28 @@ public class HUDController : MonoBehaviour
         strawText.text = "🌾 " + v + "/" + controller.targetStraw;
     }
 
+    // التفاعل مع فقدان القلوب
     void OnHeartLost(int _lost)
     {
         if (controller != null) UpdateHearts(controller.GetHearts());
     }
 
-    void UpdateHearts(int v)
+    // تحديث صور القلوب
+    void UpdateHearts(int hearts)
     {
-        if (!heartsText) return;
-        heartsText.text = "❤ " + Mathf.Max(0, v);
+        if (heartImages == null || heartImages.Length == 0) return;
+
+        // تأكد من عدد القلوب الذي سيتم إخفائه
+        for (int i = 0; i < heartImages.Length; i++)
+        {
+            if (i < hearts)
+                heartImages[i].SetActive(true); // عرض القلب
+            else
+                heartImages[i].SetActive(false); // إخفاء القلب
+        }
     }
 
+    // التحديث الدوري للتايمر
     public void UpdateTimer(float secondsLeft)
     {
         if (!timerText) return;
@@ -100,4 +115,3 @@ public class HUDController : MonoBehaviour
         if (winPanel)  winPanel.SetActive(true);
     }
 }
-
