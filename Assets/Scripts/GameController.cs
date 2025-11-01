@@ -1,58 +1,118 @@
-
-using UnityEngine;
+﻿using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
     [Header("Round")]
-    public int targetStraw = 14;
-    public int hearts = 3;
-    public float roundSeconds = 40f;
+    public int  targetStraw    = 14;
+    public int  hearts         = 3;
+    public float roundSeconds  = 60f;
+    public bool forceFullMinute = true;
 
     [Header("References")]
     public ItemSpawner spawner;
 
-    int strawCount = 0;
+    int   strawCount = 0;
     float endAt;
-    bool ended = false;
+    bool  ended = false;
 
-    void OnEnable(){
+    void Awake()
+    {
+        // لو تبين تضمنين دقيقة مهما حصل:
+        if (forceFullMinute) roundSeconds = 60f;
+    }
+
+    void OnEnable()
+    {
         GameEvents.OnStrawCollected += HandleStraw;
-        GameEvents.OnHeartLost += HandleHeartLost;
-        GameEvents.OnInstantFail += HandleInstantFail;
+        GameEvents.OnHeartLost      += HandleHeartLost;
+        GameEvents.OnInstantFail    += HandleInstantFail;
     }
-    void OnDisable(){
+
+    void OnDisable()
+    {
         GameEvents.OnStrawCollected -= HandleStraw;
-        GameEvents.OnHeartLost -= HandleHeartLost;
-        GameEvents.OnInstantFail -= HandleInstantFail;
+        GameEvents.OnHeartLost      -= HandleHeartLost;
+        GameEvents.OnInstantFail    -= HandleInstantFail;
     }
 
-    void Start(){ endAt = Time.time + roundSeconds; ended = false; }
+    void Start()
+    {
+        Time.timeScale = 1f;
+        ended = false;
+        strawCount = 0;
+        endAt = Time.time + roundSeconds;
 
-    void Update(){
+        if (spawner)
+        {
+            spawner.enabled = true;
+            spawner.StartSpawning(); // أو autoStart
+        }
+    }
+
+    void Update()
+    {
         if (ended) return;
-        float remaining = Mathf.Max(0f, endAt - Time.time);
+
+        float remaining = GetRemainingTime();
         GameEvents.RaiseTimerTick(remaining);
-        if (remaining <= 0f){ EndRound(false); GameEvents.RaiseTimeUp(); }
+
+        if (remaining <= 0f)
+        {
+            EndRound(false);
+            GameEvents.RaiseTimeUp();
+        }
     }
 
-    void HandleStraw(){
+    public float GetRemainingTime()
+    {
+        return Mathf.Max(0f, endAt - Time.time);
+    }
+
+    void HandleStraw()
+    {
         if (ended) return;
         strawCount++;
-        if (strawCount >= targetStraw){ EndRound(true); GameEvents.RaiseGoalReached(); }
+        if (!forceFullMinute && strawCount >= targetStraw)
+        {
+            EndRound(true);
+            GameEvents.RaiseGoalReached();
+        }
+        else if (forceFullMinute && strawCount >= targetStraw)
+        {
+            GameEvents.RaiseGoalReached();
+        }
     }
-    void HandleHeartLost(int amt){
+
+    void HandleHeartLost(int amt)
+    {
         if (ended) return;
         hearts -= Mathf.Abs(amt);
-        if (hearts <= 0) EndRound(false);
+        if (!forceFullMinute && hearts <= 0) EndRound(false);
+        if (hearts < 0) hearts = 0;
     }
-    void HandleInstantFail(){ if (!ended) EndRound(false); }
 
-    void EndRound(bool win){
+    void HandleInstantFail()
+    {
+        if (ended) return;
+        if (!forceFullMinute) EndRound(false);
+    }
+
+    void EndRound(bool win)
+    {
+        if (ended) return;
         ended = true;
-        if (spawner) spawner.enabled = false;
-        foreach (var mover in GameObject.FindObjectsOfType<ItemMover>()) mover.enabled = false;
+
+        if (spawner)
+        {
+            spawner.StopSpawning();
+            spawner.enabled = false;
+        }
+
+        foreach (var mover in GameObject.FindObjectsOfType<ItemMover>())
+            mover.enabled = false;
     }
 
-    public int GetStraw() => strawCount;
+    public int GetStraw()  => strawCount;
     public int GetHearts() => Mathf.Max(0, hearts);
 }
+

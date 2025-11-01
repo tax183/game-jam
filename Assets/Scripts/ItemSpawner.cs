@@ -1,60 +1,107 @@
-
-using UnityEngine;
+﻿using UnityEngine;
 
 public class ItemSpawner : MonoBehaviour
 {
+    [Header("Lanes")]
     public Transform laneTop, laneMid, laneBottom;
 
+    [Header("Prefabs")]
     public GameObject strawPF, rockPF, datePF, coinPF;
 
-    public float spawnEvery = 1.25f;
-    public float itemSpeed = 5f;
+    [Header("Spawn Settings")]
+    public float spawnEvery   = 1.25f;
+    public float itemSpeed    = 5f;
     public float itemLifetime = 10f;
-    public float spawnX = 11f;
+    public float spawnX       = 11f;
+
     [Range(0,100)] public int strawWeight = 60;
     [Range(0,100)] public int rockWeight  = 20;
     [Range(0,100)] public int dateWeight  = 10;
     [Range(0,100)] public int coinWeight  = 10;
 
+    [Header("Parent (optional)")]
     public Transform itemsParent;
 
-    float nextAt = 0f;
-    int dir = 1;
+    [Header("Timer Binding (MANDATORY)")]
+    public GameController controller; // اسحبي عليه GameController من الهيَراركي
 
-    void OnEnable(){ GameEvents.OnDirectionChanged += (d)=>dir=d; }
-    void OnDisable(){ GameEvents.OnDirectionChanged -= (d)=>dir=d; }
+    [Header("Directions (half & half)")]
+    [Tooltip("+1 = يولّد من اليمين ويتحرك لليسار | -1 = يولّد من اليسار ويتحرك لليمين")]
+    public int firstHalfDirection  = +1;   // أول 30 ثانية
+    public int secondHalfDirection = -1;   // آخر 30 ثانية
 
-    void Update(){
-        if (Time.time >= nextAt){ SpawnOne(); nextAt = Time.time + spawnEvery; }
+    [Header("Control")]
+    public bool autoStart = true;
+
+    // داخلي
+    bool  spawning = false;
+    float nextAt   = 0f;
+
+    public void StartSpawning()
+    {
+        spawning = true;
+        nextAt = Time.time + 0.2f; // أول دفعة بعد مهلة قصيرة
+    }
+    public void StopSpawning() => spawning = false;
+
+    void Start()
+    {
+        if (itemsParent == null) itemsParent = transform;
+        if (autoStart) StartSpawning();
     }
 
-    void SpawnOne(){
-        var lane = PickLane();
+    void Update()
+    {
+      //  if (!spawning) return;
+
+        // مربوطة مباشرة بالتايمر
+        float left = (controller != null) ? controller.GetRemainingTime() : 0f;
+        if (left <= 0f) { StopSpawning(); return; }
+
+        // حددي الاتجاه حسب النصف
+        float half = (controller != null) ? controller.roundSeconds * 0.5f : 30f;
+        int desiredDir = (left > half) ? firstHalfDirection : secondHalfDirection;
+        int dir = (desiredDir >= 0) ? +1 : -1;
+
+        // سبون جدولي يعتمد على Time.time — لا يتوقف
+        while (Time.time >= nextAt)
+        {
+            SpawnOne(dir);
+            nextAt += spawnEvery;
+        }
+    }
+
+    void SpawnOne(int dir)
+    {
+        var lane   = PickLane();
         var prefab = PickPrefab();
         if (!lane || !prefab) return;
 
-        float x = spawnX * (dir > 0 ? 1f : -1f);
-        Vector3 pos = new Vector3(x, lane.position.y, 0f);
-        var go = GameObject.Instantiate(prefab, pos, Quaternion.identity, itemsParent);
+        float x   = spawnX * (dir > 0 ? 1f : -1f);
+        var   pos = new Vector3(x, lane.position.y, 0f);
 
-        var mover = go.GetComponent<ItemMover>(); if (!mover) mover = go.AddComponent<ItemMover>();
-        mover.speed = itemSpeed;
+        var go = Instantiate(prefab, pos, Quaternion.identity, itemsParent);
+
+        var mover = go.GetComponent<ItemMover>() ?? go.AddComponent<ItemMover>();
+        mover.speed    = itemSpeed;
         mover.lifetime = itemLifetime;
-        mover.SetDirection(dir);
+        mover.SetDirection(dir); // يتحرك بنفس اتجاه النصف الحالي
 
-        var col = go.GetComponent<Collider2D>(); if (!col) col = go.AddComponent<BoxCollider2D>();
-        col.isTrigger = true;
+        var col = go.GetComponent<Collider2D>() ?? go.AddComponent<BoxCollider2D>();
+        //col.isTrigger = true;
     }
 
-    Transform PickLane(){
-        int r = Random.Range(0,3);
-        if (r==0) return laneTop;
-        if (r==1) return laneMid;
-        return laneBottom;
+    Transform PickLane()
+    {
+        int r = Random.Range(0, 3);
+        if (r == 0) return laneTop; if (r == 1) return laneMid; return laneBottom;
     }
 
-    GameObject PickPrefab(){
+    GameObject PickPrefab()
+    {
         int total = strawWeight + rockWeight + dateWeight + coinWeight;
+        if (total <= 0) return strawPF;
+
         int r = Random.Range(0, total);
         if (r < strawWeight) return strawPF; r -= strawWeight;
         if (r < rockWeight)  return rockPF;  r -= rockWeight;
@@ -62,3 +109,7 @@ public class ItemSpawner : MonoBehaviour
         return coinPF;
     }
 }
+
+
+
+
