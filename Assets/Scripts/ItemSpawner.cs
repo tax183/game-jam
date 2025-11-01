@@ -88,7 +88,17 @@ public class ItemSpawner : MonoBehaviour
         mover.SetDirection(dir); // يتحرك بنفس اتجاه النصف الحالي
 
         var col = go.GetComponent<Collider2D>() ?? go.AddComponent<BoxCollider2D>();
-        //col.isTrigger = true;
+        col.isTrigger = true;
+        
+        // Ensure Rigidbody2D exists for trigger detection (kinematic, no gravity)
+        var rb = go.GetComponent<Rigidbody2D>();
+        if (rb == null)
+        {
+            rb = go.AddComponent<Rigidbody2D>();
+            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.gravityScale = 0f;
+            rb.simulated = true;
+        }
     }
 
     Transform PickLane()

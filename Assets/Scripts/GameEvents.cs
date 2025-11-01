@@ -11,6 +11,7 @@ public static class GameEvents
 
     public static Action<float> OnTimerTick;
     public static Action OnTimeUp;
+    public static Action<float> OnTimeReduced; // amount to reduce in seconds
 
     public static Action<float, float> OnInflateHazards; // duration, scale
     public static Action<int> OnDirectionChanged;        // +1 or -1
@@ -22,6 +23,7 @@ public static class GameEvents
 
     public static void RaiseTimerTick(float t) => OnTimerTick?.Invoke(t);
     public static void RaiseTimeUp() => OnTimeUp?.Invoke();
+    public static void RaiseTimeReduced(float seconds) => OnTimeReduced?.Invoke(seconds);
 
     public static void RaiseInflate(float dur, float scale) => OnInflateHazards?.Invoke(dur, scale);
     public static void RaiseDirection(int dir) => OnDirectionChanged?.Invoke(dir);

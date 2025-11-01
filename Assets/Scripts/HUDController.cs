@@ -17,23 +17,49 @@ public class HUDController : MonoBehaviour
     public GameObject losePanel, winPanel;
 
     bool endedShown = false;
+    bool heartsInitialized = false;
 
     void Start()
     {
         if (losePanel) losePanel.SetActive(false);
         if (winPanel)  winPanel.SetActive(false);
-
+        InitializeUI();
+    }
+    
+    void InitializeUI()
+    {
+        // Try to find controller if not assigned
+        if (controller == null)
+        {
+            controller = FindObjectOfType<GameController>();
+        }
+        
         if (controller != null)
         {
-            UpdateHearts(controller.GetHearts());  // بدءاً من عدد القلوب
+            // Explicitly show all hearts at start - use the public hearts field
+            int initialHearts = controller.hearts; // Access public field directly
+            UpdateHearts(initialHearts);
             UpdateStraw(controller.GetStraw());
             UpdateTimer(controller.roundSeconds);
         }
         else
         {
-            UpdateHearts(0); // إذا كان GameController غير موجود
+            // Default to 3 hearts if controller missing
+            Debug.LogWarning("HUDController: GameController not found! Using default values.");
+            UpdateHearts(3);
             UpdateStraw(0);
-            UpdateTimer(0f);
+            UpdateTimer(60f);
+        }
+    }
+    
+    void LateUpdate()
+    {
+        // Ensure hearts are shown on first frame if they weren't initialized properly
+        if (!heartsInitialized && heartImages != null && heartImages.Length > 0 && controller != null)
+        {
+            int currentHearts = controller.GetHearts();
+            UpdateHearts(currentHearts); // Re-initialize hearts
+            heartsInitialized = true; // Only run once
         }
     }
 
@@ -59,7 +85,37 @@ public class HUDController : MonoBehaviour
 
     void OnStraw()
     {
-        if (controller != null) UpdateStraw(controller.GetStraw());
+        // Update immediately - GameController should have already processed since events
+        // are typically handled in subscription order, but if not, we'll use coroutine as fallback
+        // Try immediate update first
+        if (controller != null)
+        {
+            UpdateStraw(controller.GetStraw());
+        }
+        else
+        {
+            // Try to find controller if not assigned
+            controller = FindObjectOfType<GameController>();
+            if (controller != null)
+            {
+                UpdateStraw(controller.GetStraw());
+            }
+        }
+        
+        // Also schedule a delayed update as safety net to catch any timing issues
+        StartCoroutine(UpdateStrawDelayed());
+    }
+    
+    System.Collections.IEnumerator UpdateStrawDelayed()
+    {
+        // Wait one frame to catch any cases where immediate update missed the change
+        yield return null;
+        
+        // Get the updated straw count
+        if (controller != null)
+        {
+            UpdateStraw(controller.GetStraw());
+        }
     }
 
     void UpdateStraw(int v)
@@ -71,21 +127,63 @@ public class HUDController : MonoBehaviour
     // التفاعل مع فقدان القلوب
     void OnHeartLost(int _lost)
     {
-        if (controller != null) UpdateHearts(controller.GetHearts());
+        // Update immediately - GameController should have already processed since events
+        // are typically handled in subscription order, but if not, we'll use coroutine as fallback
+        // Try immediate update first
+        if (controller != null)
+        {
+            UpdateHearts(controller.GetHearts());
+        }
+        else
+        {
+            // Try to find controller if not assigned
+            controller = FindObjectOfType<GameController>();
+            if (controller != null)
+            {
+                UpdateHearts(controller.GetHearts());
+            }
+        }
+        
+        // Also schedule a delayed update as safety net to catch any timing issues
+        StartCoroutine(UpdateHeartsDelayed());
+    }
+    
+    System.Collections.IEnumerator UpdateHeartsDelayed()
+    {
+        // Wait one frame to catch any cases where immediate update missed the change
+        yield return null;
+        
+        // Get the updated hearts value
+        if (controller != null)
+        {
+            UpdateHearts(controller.GetHearts());
+        }
     }
 
     // تحديث صور القلوب
     void UpdateHearts(int hearts)
     {
-        if (heartImages == null || heartImages.Length == 0) return;
+        if (heartImages == null || heartImages.Length == 0)
+        {
+            return;
+        }
 
-        // تأكد من عدد القلوب الذي سيتم إخفائه
+        // Ensure hearts is within valid range
+        hearts = Mathf.Clamp(hearts, 0, heartImages.Length);
+
+        // Show/hide hearts based on count
         for (int i = 0; i < heartImages.Length; i++)
         {
-            if (i < hearts)
-                heartImages[i].SetActive(true); // عرض القلب
-            else
-                heartImages[i].SetActive(false); // إخفاء القلب
+            if (heartImages[i] != null)
+            {
+                // Show heart if index is less than heart count (0-indexed)
+                // e.g., if hearts = 3, show indices 0, 1, 2
+                // if hearts = 2, show indices 0, 1 (hide index 2)
+                bool shouldShow = i < hearts;
+                
+                // Always set active state to ensure it updates (UI sometimes needs forced refresh)
+                heartImages[i].SetActive(shouldShow);
+            }
         }
     }
 

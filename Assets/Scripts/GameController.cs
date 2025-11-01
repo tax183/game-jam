@@ -26,6 +26,7 @@ public class GameController : MonoBehaviour
         GameEvents.OnStrawCollected += HandleStraw;
         GameEvents.OnHeartLost      += HandleHeartLost;
         GameEvents.OnInstantFail    += HandleInstantFail;
+        GameEvents.OnTimeReduced    += HandleTimeReduced;
     }
 
     void OnDisable()
@@ -33,6 +34,7 @@ public class GameController : MonoBehaviour
         GameEvents.OnStrawCollected -= HandleStraw;
         GameEvents.OnHeartLost      -= HandleHeartLost;
         GameEvents.OnInstantFail    -= HandleInstantFail;
+        GameEvents.OnTimeReduced    -= HandleTimeReduced;
     }
 
     void Start()
@@ -72,13 +74,12 @@ public class GameController : MonoBehaviour
     {
         if (ended) return;
         strawCount++;
-        if (!forceFullMinute && strawCount >= targetStraw)
+        
+        // Check win condition: must have 14 straws AND time remaining
+        float remaining = GetRemainingTime();
+        if (strawCount >= targetStraw && remaining > 0f)
         {
             EndRound(true);
-            GameEvents.RaiseGoalReached();
-        }
-        else if (forceFullMinute && strawCount >= targetStraw)
-        {
             GameEvents.RaiseGoalReached();
         }
     }
@@ -87,14 +88,33 @@ public class GameController : MonoBehaviour
     {
         if (ended) return;
         hearts -= Mathf.Abs(amt);
-        if (!forceFullMinute && hearts <= 0) EndRound(false);
         if (hearts < 0) hearts = 0;
+        
+        // If no hearts left, lose immediately
+        if (hearts <= 0)
+        {
+            EndRound(false);
+            GameEvents.RaiseTimeUp(); // Trigger lose panel
+        }
     }
 
     void HandleInstantFail()
     {
         if (ended) return;
-        if (!forceFullMinute) EndRound(false);
+        EndRound(false);
+    }
+    
+    void HandleTimeReduced(float seconds)
+    {
+        if (ended) return;
+        // Reduce remaining time by subtracting from endAt
+        endAt -= seconds;
+        // Ensure time doesn't go negative
+        if (endAt < Time.time) endAt = Time.time;
+        
+        // Immediately update the timer display
+        float remaining = GetRemainingTime();
+        GameEvents.RaiseTimerTick(remaining);
     }
 
     void EndRound(bool win)

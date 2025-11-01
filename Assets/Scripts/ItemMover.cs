@@ -45,14 +45,29 @@ public class ItemMover : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        print (other.name);
-        if (!other.name.StartsWith("Hit")) return;
-        print (other.name);
+        // Check if collider belongs to player hit zones (more robust than name checking)
+        // Accept colliders that start with "Hit" OR are child of Player or have the Player tag
+        bool isValidHit = other.name.StartsWith("Hit") || other.CompareTag("Player");
+        
+        if (!isValidHit)
+        {
+            // Also check parent for Player tag
+            if (other.transform.parent != null && other.transform.parent.CompareTag("Player"))
+                isValidHit = true;
+        }
+        
+        if (!isValidHit)
+            return;
+        
+        // Valid collision - process item
         switch (type)
         {
             case ItemType.Straw: GameEvents.RaiseStraw();        break;
             case ItemType.Rock:  GameEvents.RaiseHeartLost(1);    break;
-            case ItemType.Date:  GameEvents.RaiseInflate(5f,1.6f);break;
+            case ItemType.Date:  
+                GameEvents.RaiseInflate(5f,1.6f); // Inflate hazards
+                GameEvents.RaiseTimeReduced(5f); // Reduce time by 5 seconds
+                break;
             case ItemType.Coin:  GameEvents.RaiseInstantFail();   break;
         }
         Destroy(gameObject);
